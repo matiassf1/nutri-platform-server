@@ -1,6 +1,8 @@
 # 🥗 Nutrition Platform Backend
 
-A comprehensive NestJS backend API for a nutrition platform that connects nutritionists with patients, enabling personalized meal planning, progress tracking, and professional communication.
+A comprehensive NestJS + Prisma backend API for a nutrition platform that connects nutritionists with patients, enabling personalized meal planning, progress tracking, and professional communication.
+
+---
 
 ## 🚀 Quick Start
 
@@ -8,596 +10,279 @@ A comprehensive NestJS backend API for a nutrition platform that connects nutrit
 # Clone and setup
 git clone <repository-url>
 cd server
-cp env.example .env
+cp .env.example .env
 
 # Start with Docker (recommended)
 docker-compose up -d
 
-# Or start manually
+# Or start locally
 npm install
-npm run db:migrate
+npm run db:migrate   # run migrations (alias to prisma migrate deploy / dev)
 npm run start:dev
 ```
 
-**API Documentation**: http://localhost:3000/api/docs
+**API documentation (Swagger)**: `http://localhost:3000/api/docs`
 
-## ✨ Features
+---
 
-### 🔐 Authentication & Security
-- **JWT Authentication** with secure refresh tokens
-- **Role-based Access Control** (USER, PRO, ADMIN)
-- **Rate Limiting** to prevent abuse
-- **Input Validation** with comprehensive error handling
-- **Security Headers** with Helmet.js
+## ✨ Key Features
 
-### 👥 User Management
-- **Multi-role System**: Regular users, nutritionists (PRO), and administrators
-- **Profile Management** with detailed user information
-- **Patient Assignment** for nutritionists
-- **User Invitations** with email verification
+* **Authentication & Security**
 
-### 🍽️ Recipe & Nutrition Management
-- **Recipe Database** with ingredients and nutritional information
-- **Nutritional Analysis** with macro and micronutrient tracking
-- **Recipe Categories** and filtering options
-- **Bulk Recipe Operations** for efficiency
+  * JWT access + refresh tokens
+  * Role-based access control (USER, PRO, ADMIN)
+  * Rate limiting (throttling)
+  * Input validation and structured error handling
+  * Security headers (Helmet)
 
-### 📋 Meal Planning
-- **Weekly Nutrition Plans** with customizable schedules
-- **Meal Status Tracking** (planned, completed, skipped)
-- **Plan Templates** for quick setup
-- **Patient-Specific Plans** with dietary restrictions
+* **User & Patient Management**
 
-### 👨‍⚕️ Patient Management (PRO Feature)
-- **Patient Profiles** with medical history
-- **Progress Tracking** with metrics and analytics
-- **Appointment Scheduling** and management
-- **Communication Tools** for patient interaction
+  * Multi-role users (regular, nutritionist PRO, admin)
+  * Profile management and invitations
+  * Patient assignment and medical history (PRO)
 
-### 📊 Analytics & Reporting
-- **Progress Metrics** tracking over time
-- **Nutritional Reports** with detailed insights
-- **Patient Statistics** for nutritionists
-- **Performance Dashboards**
+* **Recipes & Nutrition**
 
-### 💬 Communication System
-- **Real-time Messaging** between users
-- **Email Notifications** with customizable templates
-- **System Notifications** for important updates
-- **File Sharing** with secure uploads
+  * Recipe CRUD with ingredients and nutrition facts
+  * Macro/micronutrient analysis
+  * Categories, filtering and bulk operations
 
-### 📁 File Management
-- **AWS S3 Integration** for scalable file storage
-- **Presigned URLs** for secure uploads
-- **Image Processing** and optimization
-- **File Type Validation** and security
+* **Meal Planning**
+
+  * Weekly plans, templates and patient-specific plans
+  * Meal status tracking (planned, completed, skipped)
+
+* **Progress & Analytics**
+
+  * Track progress metrics over time
+  * Reports and dashboards for nutritionists
+
+* **Communication & Files**
+
+  * Real-time messaging and notifications
+  * Email (SendGrid / SES) templates
+  * File uploads to S3 with presigned URLs
+
+---
 
 ## 🛠️ Tech Stack
 
-| Category | Technology | Purpose |
-|----------|------------|---------|
-| **Backend** | NestJS + TypeScript | Robust, scalable API framework |
-| **Database** | PostgreSQL + Prisma | Reliable data storage with type-safe ORM |
-| **Authentication** | JWT + Passport | Secure user authentication |
-| **Validation** | class-validator | Request validation and sanitization |
-| **Documentation** | Swagger/OpenAPI | Interactive API documentation |
-| **File Storage** | AWS S3 + Multer | Scalable file upload and storage |
-| **Email** | SendGrid/AWS SES | Reliable email delivery |
-| **Caching** | Redis | Performance optimization |
-| **Containerization** | Docker + Compose | Easy deployment and scaling |
+| Layer      | Tech                | Purpose                          |
+| ---------- | ------------------- | -------------------------------- |
+| Backend    | NestJS + TypeScript | API framework                    |
+| ORM        | Prisma              | Database access & migrations     |
+| DB         | PostgreSQL          | Persistent storage               |
+| Auth       | JWT + Passport      | Authentication                   |
+| Validation | class-validator     | DTO validation                   |
+| Docs       | Swagger / OpenAPI   | API docs                         |
+| Storage    | AWS S3 + Multer     | File storage                     |
+| Email      | SendGrid / SES      | Email delivery                   |
+| Cache      | Redis               | Caching, sessions, rate-limiting |
+| DevOps     | Docker & Compose    | Local reproducible environments  |
 
-## 📋 Prerequisites
+---
 
-### Required
-- **Node.js** 18+ (LTS recommended)
-- **PostgreSQL** 15+ (or compatible database)
-- **Redis** 7+ (for caching and sessions)
+## ⚙️ Prerequisites
 
-### Optional
-- **Docker & Docker Compose** (for containerized deployment)
-- **AWS Account** (for S3 file storage)
-- **SendGrid Account** (for email services)
+**Required**
+
+* Node.js 18+ (LTS recommended)
+* PostgreSQL 13+ (or compatible)
+* Redis (optional but recommended for caching/session)
+
+**Optional**
+
+* Docker & Docker Compose
+* AWS account for S3
+* SendGrid / SES account for email
+
+---
 
 ## 🚀 Installation
 
-### Option 1: Docker (Recommended for Development)
-
-**Perfect for quick setup and consistent environments**
+### Using Docker (recommended)
 
 ```bash
-# 1. Clone the repository
+# 1. clone
 git clone <repository-url>
 cd server
+cp .env.example .env
+# edit .env if needed
 
-# 2. Copy environment variables
-cp env.example .env
-
-# 3. Configure your environment (see Environment Variables section)
-nano .env
-
-# 4. Start all services with Docker Compose
-docker-compose up -d
-
-# 5. Check if everything is running
-docker-compose ps
+docker-compose up -d --build
 ```
 
-**What this does:**
-- Starts PostgreSQL database
-- Starts Redis cache
-- Builds and runs the NestJS application
-- Sets up networking between services
+This starts the app, PostgreSQL and Redis (if included in `docker-compose`).
 
-### Option 2: Manual Installation
-
-**For development with local services**
+### Manual (local services)
 
 ```bash
-# 1. Install dependencies
 npm install
+cp .env.example .env
+# update .env with your DB credentials
 
-# 2. Set up PostgreSQL and Redis locally
-# (Make sure they're running on default ports)
+# run migrations and generate client
+npm run db:migrate
+npm run db:generate
 
-# 3. Configure environment
-cp env.example .env
-# Edit .env with your local database credentials
-
-# 4. Set up the database
-npm run db:migrate    # Run database migrations
-npm run db:generate   # Generate Prisma client
-
-# 5. Seed with sample data (optional)
+# (optional) seed data
 npm run db:seed
 
-# 6. Start the development server
+# development server
 npm run start:dev
 ```
 
-### Option 3: Production Deployment
+### Production
 
 ```bash
-# 1. Build the application
 npm run build
-
-# 2. Start in production mode
 npm run start:prod
 ```
 
+---
+
 ## 📚 API Documentation
 
-Once the server is running, access the interactive documentation:
+* **Swagger UI** — `http://localhost:3000/api/docs`
+* **Health check** — `http://localhost:3000/health`
+* **OpenAPI JSON** — `http://localhost:3000/api/docs-json`
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Swagger UI** | http://localhost:3000/api/docs | Interactive API documentation |
-| **Health Check** | http://localhost:3000/health | Service health status |
-| **OpenAPI JSON** | http://localhost:3000/api/docs-json | Raw OpenAPI specification |
-
-### API Features
-- **Interactive Testing**: Test endpoints directly from the browser
-- **Authentication**: Built-in JWT token testing
-- **Request/Response Examples**: See real data structures
-- **Error Documentation**: Comprehensive error code reference
+---
 
 ## ⚙️ Environment Variables
 
-### Required Variables
+Create `.env` from `.env.example` and fill the required values.
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/nutrition_platform` |
-| `JWT_SECRET` | JWT signing secret (32+ chars) | `your-super-secret-jwt-key-here` |
-| `JWT_REFRESH_SECRET` | JWT refresh secret (32+ chars) | `your-refresh-secret-key-here` |
+**Required**
 
-### Optional Variables
+* `DATABASE_URL` — PostgreSQL connection string (e.g. `postgresql://user:pass@host:5432/dbname`)
+* `JWT_SECRET` — Access token secret (use strong, 32+ char random value)
+* `JWT_REFRESH_SECRET` — Refresh token secret (32+ chars)
 
-| Variable | Description | Default | Required For |
-|----------|-------------|---------|--------------|
-| `JWT_EXPIRES_IN` | JWT token expiration | `15m` | - |
-| `JWT_REFRESH_EXPIRES_IN` | Refresh token expiration | `7d` | - |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6379` | Caching |
-| `PORT` | Server port | `3000` | - |
-| `NODE_ENV` | Environment | `development` | - |
-| `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:8080` | CORS |
+**Common / Optional**
 
-### AWS S3 (File Storage)
+* `JWT_EXPIRES_IN` (default `15m`)
+* `JWT_REFRESH_EXPIRES_IN` (default `7d`)
+* `REDIS_URL` (e.g. `redis://localhost:6379`)
+* `PORT` (default `3000`)
+* `NODE_ENV` (`development`|`production`)
+* `FRONTEND_URL` (for CORS)
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `AWS_ACCESS_KEY_ID` | AWS access key | Yes |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key | Yes |
-| `AWS_S3_BUCKET` | S3 bucket name | Yes |
-| `AWS_REGION` | AWS region | No (defaults to us-east-1) |
+**AWS S3**
 
-### Email Service
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_ACCESS_KEY`
+* `AWS_S3_BUCKET`
+* `AWS_REGION` (default `us-east-1`)
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `SENDGRID_API_KEY` | SendGrid API key | Yes (for SendGrid) |
-| `FROM_EMAIL` | From email address | Yes |
-| `FROM_NAME` | From name | No |
+**Email (SendGrid / SES)**
 
-### Example .env File
+* `SENDGRID_API_KEY` or SES credentials
+* `FROM_EMAIL`
+* `FROM_NAME`
 
-```env
-# Database
-DATABASE_URL="postgresql://postgres:password@localhost:5432/nutrition_platform"
+---
 
-# JWT
-JWT_SECRET="your-super-secret-jwt-key-change-in-production"
-JWT_REFRESH_SECRET="your-refresh-secret-key-change-in-production"
-JWT_EXPIRES_IN="15m"
-JWT_REFRESH_EXPIRES_IN="7d"
+## 🔗 Core API Endpoints (examples)
 
-# Redis
-REDIS_URL="redis://localhost:6379"
+> Auth
 
-# AWS S3
-AWS_ACCESS_KEY_ID="your-aws-access-key"
-AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
-AWS_S3_BUCKET="your-bucket-name"
-AWS_REGION="us-east-1"
+| Method | Path             | Description                            | Auth |
+| -----: | ---------------- | -------------------------------------- | :--: |
+|   POST | `/auth/register` | Register new user                      |   ❌  |
+|   POST | `/auth/login`    | Login (returns access + refresh token) |   ❌  |
+|   POST | `/auth/refresh`  | Refresh access token                   |   ❌  |
+|   POST | `/auth/logout`   | Revoke refresh token                   |   ✅  |
+|    GET | `/auth/profile`  | Get current user                       |   ✅  |
 
-# Email
-SENDGRID_API_KEY="your-sendgrid-api-key"
-FROM_EMAIL="noreply@yourdomain.com"
-FROM_NAME="Nutrition Platform"
+> Users / Profiles
 
-# Application
-PORT=3000
-NODE_ENV=development
-FRONTEND_URL="http://localhost:8080"
+| Method | Path              | Description             | Role |
+| -----: | ----------------- | ----------------------- | :--: |
+|    GET | `/users/profile`  | Get own profile         | USER |
+|    PUT | `/users/profile`  | Update own profile      | USER |
+|    GET | `/users/patients` | Nutritionist's patients |  PRO |
+
+> Recipes
+
+| Method | Path           | Description                      | Role |
+| -----: | -------------- | -------------------------------- | :--: |
+|    GET | `/recipes`     | List recipes (filters supported) | USER |
+|   POST | `/recipes`     | Create recipe                    |  PRO |
+|    GET | `/recipes/:id` | Get recipe detail                | USER |
+|  PATCH | `/recipes/:id` | Update recipe                    |  PRO |
+| DELETE | `/recipes/:id` | Delete recipe                    |  PRO |
+
+> Plans
+
+| Method | Path                                  | Description        | Role |
+| -----: | ------------------------------------- | ------------------ | :--: |
+|    GET | `/plans`                              | List plans         | USER |
+|   POST | `/plans`                              | Create plan        |  PRO |
+|  PATCH | `/plans/:planId/meals/:mealId/status` | Update meal status | USER |
+
+(Full list is available in Swagger)
+
+---
+
+## 🗄️ Database & Prisma
+
+* Prisma is used for schema management and queries (`schema.prisma`).
+* Migrations are tracked with Prisma migrate.
+* Generate the Prisma client after schema changes: `npm run db:generate`.
+
+**Example scripts** (in `package.json`)
+
+```json
+{
+  "scripts": {
+    "db:migrate": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "db:seed": "prisma db seed",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main.js",
+    "build": "nest build"
+  }
+}
 ```
 
-## 🔗 API Endpoints
+---
 
-### 🔐 Authentication
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/auth/register` | Register new user | ❌ |
-| `POST` | `/auth/login` | User login | ❌ |
-| `POST` | `/auth/refresh` | Refresh access token | ❌ |
-| `POST` | `/auth/logout` | User logout | ✅ |
-| `GET` | `/auth/profile` | Get current user profile | ✅ |
+## 🛠️ Development Workflow
 
-### 👥 Users
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/users/profile` | Get user profile | USER |
-| `PUT` | `/users/profile` | Update user profile | USER |
-| `PUT` | `/users/profile/details` | Update profile details | USER |
-| `GET` | `/users/patients` | Get nutritionist patients | PRO |
+1. Create a feature branch
+2. Implement and test locally
+3. Run migrations and update Prisma client
+4. Lint, format and add tests
+5. Open a PR and request reviews
 
-### 🍽️ Recipes
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/recipes` | Get all recipes with filters | USER |
-| `POST` | `/recipes` | Create new recipe | PRO |
-| `GET` | `/recipes/:id` | Get recipe by ID | USER |
-| `PATCH` | `/recipes/:id` | Update recipe | PRO |
-| `DELETE` | `/recipes/:id` | Delete recipe | PRO |
-| `GET` | `/recipes/stats` | Get recipe statistics | PRO |
+---
 
-### 📋 Nutrition Plans
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/plans` | Get all nutrition plans | USER |
-| `POST` | `/plans` | Create new plan | PRO |
-| `GET` | `/plans/:id` | Get plan by ID | USER |
-| `PATCH` | `/plans/:id` | Update plan | PRO |
-| `DELETE` | `/plans/:id` | Delete plan | PRO |
-| `PATCH` | `/plans/:planId/meals/:mealId/status` | Update meal status | USER |
+## 🔒 Security Considerations
 
-### 👨‍⚕️ Patients (PRO Only)
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/patients` | Get all patients | PRO |
-| `POST` | `/patients` | Create new patient | PRO |
-| `GET` | `/patients/:id` | Get patient by ID | PRO |
-| `PATCH` | `/patients/:id` | Update patient | PRO |
-| `DELETE` | `/patients/:id` | Delete patient | PRO |
+* Use strong, rotated secrets for JWT and DB credentials.
+* Limit file upload sizes and validate mime types.
+* Use HTTPS in production and properly configure CORS.
+* Store refresh tokens securely (HTTP-only cookies recommended).
 
-### 📊 Metrics & Analytics
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/metrics` | Get progress metrics | USER |
-| `POST` | `/metrics` | Create new metric | USER |
-| `GET` | `/metrics/stats/:patientId` | Get patient statistics | PRO |
-
-### 📁 File Management
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/files/upload` | Upload file | USER |
-| `POST` | `/files/presign` | Generate presigned URL | USER |
-| `GET` | `/files/:id` | Get file information | USER |
-
-### 💬 Messaging
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/messages` | Get messages | USER |
-| `POST` | `/messages` | Send message | USER |
-| `PATCH` | `/messages/:id/read` | Mark message as read | USER |
-| `GET` | `/messages/unread-count` | Get unread count | USER |
-
-### 📧 Notifications
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/notifications/send-email` | Send email notification | PRO |
-
-### 🏥 Appointments (PRO Only)
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/appointments` | Get appointments | PRO |
-| `POST` | `/appointments` | Create appointment | PRO |
-| `PATCH` | `/appointments/:id` | Update appointment | PRO |
-| `DELETE` | `/appointments/:id` | Delete appointment | PRO |
-
-### 📈 Patient Metrics (PRO Only)
-| Method | Endpoint | Description | Role Required |
-|--------|----------|-------------|---------------|
-| `GET` | `/patient-metrics` | Get patient metrics | PRO |
-| `POST` | `/patient-metrics` | Create patient metric | PRO |
-| `GET` | `/patient-metrics/:patientId` | Get metrics for patient | PRO |
-
-## 🗄️ Database Schema
-
-The application uses PostgreSQL with Prisma ORM for type-safe database operations.
-
-### Core Entities
-
-| Entity | Description | Key Features |
-|--------|-------------|--------------|
-| **Users** | User accounts with authentication | JWT tokens, role-based access |
-| **UserProfiles** | Extended user information | Personal details, preferences |
-| **Recipes** | Recipe management | Ingredients, nutrition facts, categories |
-| **Plans** | Nutrition plans | Weekly schedules, meal assignments |
-| **Patients** | Patient management (PRO) | Medical history, progress tracking |
-| **MedicalRecords** | Patient medical information | Allergies, conditions, medications |
-| **ProgressMetrics** | Health tracking | Weight, measurements, goals |
-| **Messages** | Communication system | Real-time messaging, notifications |
-| **FileAttachments** | File management | S3 integration, metadata |
-
-### Database Features
-- **Type Safety**: Full TypeScript integration with Prisma
-- **Migrations**: Version-controlled schema changes
-- **Relationships**: Complex entity relationships with foreign keys
-- **Indexing**: Optimized queries with proper indexing
-- **Constraints**: Data integrity with database constraints
-
-## 🛠️ Development
-
-### Available Scripts
-
-#### Development
-```bash
-npm run start:dev          # Start with hot reload
-npm run start:debug        # Start with debugging
-npm run build              # Build for production
-npm run start:prod         # Start production server
-```
-
-#### Database Management
-```bash
-npm run db:generate        # Generate Prisma client
-npm run db:push           # Push schema changes to DB
-npm run db:migrate        # Run database migrations
-npm run db:seed           # Seed database with sample data
-npm run db:studio         # Open Prisma Studio (GUI)
-```
-
-#### Testing
-```bash
-npm run test              # Run unit tests
-npm run test:watch        # Run tests in watch mode
-npm run test:e2e          # Run end-to-end tests
-npm run test:cov          # Run tests with coverage
-npm run test:debug        # Debug tests
-```
-
-#### Code Quality
-```bash
-npm run lint              # Run ESLint
-npm run lint:fix          # Fix ESLint issues
-npm run format            # Format code with Prettier
-```
-
-### Project Structure
-
-```
-src/
-├── modules/                    # Feature modules (Domain-driven design)
-│   ├── auth/                  # Authentication & authorization
-│   │   ├── controllers/       # Auth controllers
-│   │   ├── services/          # Auth business logic
-│   │   ├── dtos/             # Auth data transfer objects
-│   │   ├── guards/           # Auth guards
-│   │   └── strategies/       # Passport strategies
-│   ├── users/                 # User management
-│   ├── recipes/               # Recipe management
-│   ├── plans/                 # Nutrition plans
-│   ├── patients/              # Patient management (PRO)
-│   ├── metrics/               # Progress metrics
-│   ├── files/                 # File upload & management
-│   ├── messages/              # Messaging system
-│   ├── notifications/         # Email notifications
-│   ├── appointments/          # Appointment scheduling
-│   └── patient-metrics/       # Patient-specific metrics
-├── common/                    # Shared components
-│   ├── decorators/            # Custom decorators
-│   ├── guards/                # Global guards
-│   ├── interceptors/          # Response interceptors
-│   ├── filters/               # Exception filters
-│   ├── services/              # Common services
-│   └── interfaces/            # Shared interfaces
-├── config/                    # Configuration modules
-│   ├── app-config.module.ts   # App configuration
-│   ├── database.module.ts     # Database configuration
-│   └── prisma.service.ts      # Prisma service
-├── health/                    # Health check module
-├── messaging/                 # Email & notification system
-└── main.ts                    # Application entry point
-```
-
-### Development Workflow
-
-1. **Feature Development**
-   ```bash
-   # Create new feature branch
-   git checkout -b feature/new-feature
-   
-   # Start development server
-   npm run start:dev
-   
-   # Run tests
-   npm run test:watch
-   ```
-
-2. **Database Changes**
-   ```bash
-   # Modify schema.prisma
-   # Run migration
-   npm run db:migrate
-   
-   # Update Prisma client
-   npm run db:generate
-   ```
-
-3. **Code Quality**
-   ```bash
-   # Before committing
-   npm run lint:fix
-   npm run format
-   npm run test
-   ```
-
-## 🔒 Security
-
-### Authentication & Authorization
-- **JWT Tokens**: Secure access and refresh token system
-- **Role-Based Access Control (RBAC)**: USER, PRO, ADMIN roles
-- **Password Security**: bcrypt hashing with salt rounds
-- **Token Expiration**: Configurable token lifetimes
-
-### API Security
-- **Rate Limiting**: Prevents abuse with @nestjs/throttler
-- **Input Validation**: Comprehensive validation with class-validator
-- **CORS Protection**: Configurable cross-origin resource sharing
-- **Security Headers**: Helmet.js for security headers
-- **Request Validation**: Type-safe request/response handling
-
-### Data Protection
-- **SQL Injection Prevention**: Prisma ORM with parameterized queries
-- **XSS Protection**: Input sanitization and output encoding
-- **File Upload Security**: Type validation and size limits
-- **Environment Variables**: Secure configuration management
-
-## 🚀 Deployment
-
-### Docker Deployment
-```bash
-# Build and run with Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
-
-# Scale the application
-docker-compose up -d --scale app=3
-```
-
-### Environment-Specific Configuration
-- **Development**: Hot reload, debug mode, detailed logging
-- **Staging**: Production-like with test data
-- **Production**: Optimized performance, error tracking, monitoring
-
-### Health Monitoring
-- **Health Checks**: `/health` endpoint for load balancers
-- **Metrics**: Application performance monitoring
-- **Logging**: Structured logging with different levels
-- **Error Tracking**: Comprehensive error reporting
+---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
+Please follow the CONTRIBUTING guidelines in the repo.
 
-### 1. Setup Development Environment
-```bash
-# Fork and clone the repository
-git clone https://github.com/your-username/nutrition-platform-backend.git
-cd nutrition-platform-backend
+1. Fork the repo
+2. Create a branch
+3. Add tests for your changes
+4. Ensure linting and tests pass
+5. Submit a PR with a clear description
 
-# Install dependencies
-npm install
-
-# Set up environment
-cp env.example .env
-# Configure your .env file
-
-# Start development services
-docker-compose up -d
-```
-
-### 2. Development Process
-```bash
-# Create feature branch
-git checkout -b feature/your-feature-name
-
-# Make your changes
-# Follow the coding standards and patterns
-
-# Run tests
-npm run test
-npm run test:e2e
-
-# Check code quality
-npm run lint
-npm run format
-```
-
-### 3. Pull Request Process
-1. **Fork** the repository
-2. **Create** a feature branch
-3. **Make** your changes with tests
-4. **Ensure** all tests pass
-5. **Submit** a pull request with clear description
-
-### Coding Standards
-- **TypeScript**: Strict mode enabled
-- **ESLint**: Follow configured rules
-- **Prettier**: Consistent code formatting
-- **Testing**: Unit and integration tests required
-- **Documentation**: Update README and API docs
+---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support & Community
-
-### Getting Help
-- **Documentation**: Check this README and API docs
-- **Issues**: Create a GitHub issue for bugs or feature requests
-- **Discussions**: Use GitHub Discussions for questions
-- **Email**: Contact the development team
-
-### Reporting Issues
-When reporting issues, please include:
-- **Environment**: OS, Node.js version, database version
-- **Steps to Reproduce**: Clear, numbered steps
-- **Expected Behavior**: What should happen
-- **Actual Behavior**: What actually happens
-- **Logs**: Relevant error logs or console output
-
-### Feature Requests
-For new features, please:
-- **Check** existing issues first
-- **Describe** the use case clearly
-- **Explain** the expected behavior
-- **Consider** the impact on existing functionality
+MIT — see the `LICENSE` file.
 
 ---
 
 **Built with ❤️ by the Nutrition Platform Team**
-
-*Empowering nutritionists and patients with technology*
-#   n u t r i - p l a t f o r m - s e r v e r 
- 
- 
