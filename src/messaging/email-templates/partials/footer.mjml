@@ -1,0 +1,32 @@
+<!-- NutriTeam Footer Component -->
+<mj-section
+  background-color="#F9FAFB"
+  padding="32px 24px"
+  border-radius="0px 0px 12px 12px"
+>
+  <mj-column>
+    <mj-text align="center" color="#6B7280" font-size="12px" line-height="20px">
+      <a
+        href="{{securityUrl}}"
+        style="color: #4caf50; text-decoration: none; font-weight: 500"
+        >Seguridad</a
+      >
+      ◦
+      <a
+        href="{{privacyUrl}}"
+        style="color: #4caf50; text-decoration: none; font-weight: 500"
+        >Política de Privacidad</a
+      >
+      ◦
+      <a
+        href="{{termsUrl}}"
+        style="color: #4caf50; text-decoration: none; font-weight: 500"
+        >Términos de Uso</a
+      >
+      <br /><br />
+      © {{ currentYear }} NutriTeam. Todos los derechos reservados.
+      <br />
+      Este correo fue enviado a {{ userEmail }}
+    </mj-text>
+  </mj-column>
+</mj-section>

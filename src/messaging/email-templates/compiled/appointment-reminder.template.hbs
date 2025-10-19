@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}} - NutriTeam</title>
+  <style>
+    body {
+      font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #F9FAFB;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    }
+    .header {
+      background-color: #FFFFFF;
+      padding: 32px 24px;
+      text-align: center;
+      border-radius: 12px 12px 0 0;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1F2937;
+      margin: 0;
+    }
+    .logo .accent {
+      color: #4CAF50;
+    }
+    .content {
+      padding: 40px 24px;
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1F2937;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .greeting {
+      font-size: 18px;
+      color: #374151;
+      margin-bottom: 20px;
+    }
+    .message {
+      font-size: 16px;
+      color: #6B7280;
+      line-height: 28px;
+      margin-bottom: 20px;
+    }
+    .appointment-details {
+      background-color: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .appointment-details h3 {
+      color: #15803D;
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #D1FAE5;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: #374151;
+    }
+    .detail-value {
+      color: #6B7280;
+    }
+    .reminder-note {
+      background-color: #FEF3C7;
+      border: 1px solid #FCD34D;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 20px 0;
+      color: #92400E;
+      font-size: 14px;
+    }
+    .action-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+      color: #FFFFFF;
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+      margin: 20px 0;
+      transition: all 0.3s ease;
+    }
+    .action-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+    }
+    .additional-info {
+      font-size: 14px;
+      color: #6B7280;
+      text-align: center;
+      margin: 24px 0;
+      padding: 16px;
+      background-color: #F9FAFB;
+      border-radius: 8px;
+    }
+    .footer {
+      background-color: #F9FAFB;
+      padding: 32px 24px;
+      text-align: center;
+      border-radius: 0 0 12px 12px;
+    }
+    .footer-links {
+      margin-bottom: 16px;
+    }
+    .footer-links a {
+      color: #4CAF50;
+      text-decoration: none;
+      font-weight: 500;
+      margin: 0 8px;
+    }
+    .footer-text {
+      font-size: 12px;
+      color: #6B7280;
+      line-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1 class="logo">
+        <span class="accent">N</span>utriTeam
+      </h1>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <h2 class="title">{{title}}</h2>
+      
+      <div class="greeting">
+        Hola <span style="color: #4CAF50; font-weight: 600">{{userName}}</span>,
+      </div>
+
+      <div class="message">
+        {{message}}
+      </div>
+
+      <!-- Appointment Details -->
+      <div class="appointment-details">
+        <h3>📅 Detalles de tu Cita</h3>
+        <div class="detail-row">
+          <span class="detail-label">Fecha:</span>
+          <span class="detail-value">{{appointmentDate}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Hora:</span>
+          <span class="detail-value">{{appointmentTime}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Tipo:</span>
+          <span class="detail-value">{{appointmentType}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Nutricionista:</span>
+          <span class="detail-value">{{nutritionistName}}</span>
+        </div>
+      </div>
+
+      <!-- Reminder Note -->
+      <div class="reminder-note">
+        ⏰ <strong>Recordatorio:</strong> Si necesitas reprogramar o cancelar tu cita, hazlo con al menos 24 horas de anticipación.
+      </div>
+
+      <!-- Action Button -->
+      {{#if actionUrl}}
+      <div style="text-align: center;">
+        <a href="{{actionUrl}}" class="action-button">
+          {{actionText}}
+        </a>
+      </div>
+      {{/if}}
+
+      <!-- Additional Info -->
+      {{#if additionalInfo}}
+      <div class="additional-info">
+        {{additionalInfo}}
+      </div>
+      {{/if}}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-links">
+        <a href="{{securityUrl}}">Seguridad</a>
+        ◦
+        <a href="{{privacyUrl}}">Política de Privacidad</a>
+        ◦
+        <a href="{{termsUrl}}">Términos de Uso</a>
+      </div>
+      <div class="footer-text">
+        © {{currentYear}} NutriTeam. Todos los derechos reservados.<br>
+        Este correo fue enviado a {{userEmail}}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

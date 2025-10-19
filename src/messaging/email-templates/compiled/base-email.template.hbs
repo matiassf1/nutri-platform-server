@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}} - NutriTeam</title>
+  <style>
+    body {
+      font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #F9FAFB;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    }
+    .header {
+      background-color: #FFFFFF;
+      padding: 32px 24px;
+      text-align: center;
+      border-radius: 12px 12px 0 0;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1F2937;
+      margin: 0;
+    }
+    .logo .accent {
+      color: #4CAF50;
+    }
+    .content {
+      padding: 40px 24px;
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1F2937;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .greeting {
+      font-size: 18px;
+      color: #374151;
+      margin-bottom: 20px;
+    }
+    .greeting .name {
+      color: #4CAF50;
+      font-weight: 600;
+    }
+    .message {
+      font-size: 16px;
+      color: #6B7280;
+      line-height: 28px;
+      margin-bottom: 20px;
+    }
+    .warning {
+      font-size: 14px;
+      color: #EF4444;
+      font-style: italic;
+      background-color: #FEF2F2;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .button {
+      display: inline-block;
+      background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+      color: #FFFFFF;
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .additional-info {
+      font-size: 14px;
+      color: #6B7280;
+      text-align: center;
+      margin-top: 24px;
+    }
+    .footer {
+      background-color: #F9FAFB;
+      padding: 32px 24px;
+      text-align: center;
+      border-radius: 0 0 12px 12px;
+    }
+    .footer-links {
+      font-size: 12px;
+      color: #6B7280;
+      line-height: 20px;
+    }
+    .footer-links a {
+      color: #4CAF50;
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="logo">
+        <span class="accent">N</span>utriTeam
+      </h1>
+    </div>
+    
+    <div class="content">
+      <h2 class="title">{{title}}</h2>
+      
+      <div class="greeting">
+        Hola <span class="name">{{userName}}</span>,
+      </div>
+      
+      <div class="message">
+        {{message}}
+      </div>
+      
+      {{#if warning}}
+      <div class="warning">
+        ⚠️ {{warning}}
+      </div>
+      {{/if}}
+      
+      {{#if actionUrl}}
+      <div style="text-align: center;">
+        <a href="{{actionUrl}}" class="button">{{actionText}}</a>
+      </div>
+      {{/if}}
+      
+      {{#if additionalInfo}}
+      <div class="additional-info">
+        {{additionalInfo}}
+      </div>
+      {{/if}}
+    </div>
+    
+    <div class="footer">
+      <div class="footer-links">
+        <a href="{{securityUrl}}">Seguridad</a>
+        ◦
+        <a href="{{privacyUrl}}">Política de Privacidad</a>
+        ◦
+        <a href="{{termsUrl}}">Términos de Uso</a>
+        <br /><br />
+        © {{currentYear}} NutriTeam. Todos los derechos reservados.<br />
+        Este correo fue enviado a {{userEmail}}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

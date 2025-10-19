@@ -1,0 +1,523 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id              String   @id @default(cuid())
+    email           String   @unique
+    name            String
+    password        String
+    role            UserRole
+    avatar          String?
+    isActive        Boolean  @default(true)
+    // Campos profesionales
+    phone           String?
+    address         String?
+    bio             String?
+    specialization  String?
+    experience      Int? // Años de experiencia
+    education       String? // Formación académica
+    certifications  String? // Certificaciones
+    website         String? // Sitio web personal
+    linkedin        String? // Perfil de LinkedIn
+    instagram       String? // Perfil de Instagram
+    consultationFee Float? // Tarifa de consulta
+    timezone        String? // Zona horaria
+    language        String[] // Idiomas que habla
+    availability    Json? // Horarios de disponibilidad
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+
+    // Relaciones
+    profile            UserProfile?
+    patients           Patient[]           @relation("NutritionistPatients")
+    recipes            Recipe[]
+    nutritionistPlans  Plan[]              @relation("NutritionistPlans")
+    messages           Message[]           @relation("SenderMessages")
+    receivedMessages   Message[]           @relation("ReceiverMessages")
+    patientMetrics     ProgressMetric[]    @relation("PatientMetrics")
+    recordedMetrics    ProgressMetric[]    @relation("RecordedMetrics")
+    medicalRecordNotes MedicalRecordNote[]
+    appointments       Appointment[]
+    Patient            Patient?
+    invitations        PatientInvitation[] @relation("NutritionistInvitations")
+    planVersions       PlanVersion[]
+    auditLogs          AuditLog[]
+    recordedPatientMetrics PatientMetric[]
+
+    @@map("users")
+}
+
+model PatientInvitation {
+    id               String           @id @default(cuid())
+    token            String           @unique
+    email            String
+    patientName      String
+    nutritionistId   String
+    nutritionistName String
+    personalMessage  String?
+    status           InvitationStatus @default(PENDING)
+    expiresAt        DateTime
+    acceptedAt       DateTime?
+    createdAt        DateTime         @default(now())
+    updatedAt        DateTime         @updatedAt
+
+    // Relaciones
+    nutritionist User @relation("NutritionistInvitations", fields: [nutritionistId], references: [id], onDelete: Cascade)
+
+    @@map("patient_invitations")
+}
+
+enum InvitationStatus {
+    PENDING
+    ACCEPTED
+    EXPIRED
+    CANCELLED
+}
+
+model UserProfile {
+    id                  String        @id @default(cuid())
+    userId              String        @unique
+    dietaryRestrictions String[]
+    allergies           String[]
+    goals               String[]
+    activityLevel       ActivityLevel
+    targetWeight        Float?
+    currentWeight       Float?
+    height              Float?
+    age                 Int?
+    gender              Gender?
+    createdAt           DateTime      @default(now())
+    updatedAt           DateTime      @updatedAt
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("user_profiles")
+}
+
+model Recipe {
+    id          String     @id @default(cuid())
+    name        String     // Ahora requerido después de la migración
+    title       String     // Mantener para compatibilidad
+    description String
+    image       String?
+    cookTime    Int
+    prepTime    Int
+    servings    Int
+    difficulty  Difficulty
+    tags        String[]
+    allergens   String[]
+    isActive    Boolean    @default(true)
+    authorId    String     // Ahora requerido después de la migración
+    createdBy   String     // Mantener para compatibilidad
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+
+    // Relaciones
+    author         User               @relation(fields: [authorId], references: [id])
+    ingredients    RecipeIngredient[]
+    nutrition      RecipeNutrition?
+    planMeals      PlanMeal[]         @relation("PlanMealRecipes")
+    selectedMeals  PlanMeal[]         @relation("SelectedRecipe")
+
+    @@map("recipes")
+}
+
+model RecipeIngredient {
+    id       String  @id @default(cuid())
+    recipeId String
+    name     String
+    amount   Float
+    unit     String
+    notes    String?
+
+    recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+    @@map("recipe_ingredients")
+}
+
+model RecipeNutrition {
+    id          String @id @default(cuid())
+    recipeId    String @unique
+    calories    Float
+    protein     Float
+    carbs       Float
+    fat         Float
+    fiber       Float
+    sugar       Float
+    sodium      Float?
+    cholesterol Float?
+
+    recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+    @@map("recipe_nutrition")
+}
+
+model Plan {
+    id              String     @id @default(cuid())
+    name            String
+    description     String?
+    patientId       String // refiere a Patient.id
+    nutritionistId  String // refiere a User.id (el pro)
+    status          PlanStatus @default(DRAFT)
+    startDate       DateTime
+    endDate         DateTime?
+    goals           String[]   @default([])
+    notes           String?
+    kcalPerDay      Int?
+    proteinGr       Int?
+    fatGr           Int?
+    carbsGr         Int?
+    frequencyPerDay Int? // nro de comidas/día sugerido
+    restrictions    String[]   @default([])
+    preferences     String[]   @default([])
+    version         Int        @default(1)
+    createdAt       DateTime   @default(now())
+    updatedAt       DateTime   @updatedAt
+
+    // relaciones
+    patient      Patient       @relation(fields: [patientId], references: [id])
+    nutritionist User          @relation("NutritionistPlans", fields: [nutritionistId], references: [id])
+    days         PlanDay[]
+    versions     PlanVersion[]
+
+    @@index([patientId])
+    @@index([nutritionistId])
+    @@index([createdAt])
+    @@map("plans")
+}
+
+model PlanDay {
+    id        String    @id @default(cuid())
+    planId    String
+    dayOfWeek Int? // 0-6 (domingo-sábado) -- opcional si usas date
+    date      DateTime? // opcional: para plan con fechas concretas
+    isActive  Boolean   @default(true)
+    notes     String?
+
+    plan  Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+    meals PlanMeal[]
+
+    @@index([planId])
+    @@index([date])
+    @@map("plan_days")
+}
+
+model PlanMeal {
+    id               String     @id @default(cuid())
+    planDayId        String
+    type             MealType
+    time             String? // "08:30" o null si no aplica
+    scheduledAt      DateTime? // opcional datetime si requieres recordatorios con TZ
+    isCompleted      Boolean    @default(false)
+    completedAt      DateTime? // cuando se completó la comida
+    notes            String?
+    kcal             Int?
+    proteinGr        Int?
+    fatGr            Int?
+    carbsGr          Int?
+    selectedRecipeId String? // ID de la receta seleccionada por el paciente
+
+    planDay  PlanDay  @relation(fields: [planDayId], references: [id], onDelete: Cascade)
+    recipes  Recipe[] @relation("PlanMealRecipes")
+    selectedRecipe Recipe? @relation("SelectedRecipe", fields: [selectedRecipeId], references: [id])
+
+    @@index([planDayId])
+    @@index([selectedRecipeId])
+    @@map("plan_meals")
+}
+
+model Patient {
+    id             String        @id @default(cuid())
+    userId         String        @unique
+    nutritionistId String?
+    status         PatientStatus @default(PENDING)
+    lastVisit      DateTime?
+    nextVisit      DateTime?
+    notes          String?
+    createdAt      DateTime      @default(now())
+    updatedAt      DateTime      @updatedAt
+
+    // Relaciones
+    user           User             @relation(fields: [userId], references: [id])
+    nutritionist   User?            @relation("NutritionistPatients", fields: [nutritionistId], references: [id])
+    medicalRecord  MedicalRecord?
+    plans          Plan[]
+    progressMetric ProgressMetric[]
+    message        Message[]
+    appointments   Appointment[]
+    metrics        PatientMetric[]
+
+    @@map("patients")
+}
+
+model PatientMetric {
+    id         String      @id @default(cuid())
+    patientId  String
+    type       MetricType
+    value      Float
+    unit       String
+    recordedAt DateTime    @default(now())
+    notes      String?
+    recordedBy String
+    createdAt  DateTime    @default(now())
+    updatedAt  DateTime    @updatedAt
+
+    // Relaciones
+    patient    Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+    recorder   User    @relation(fields: [recordedBy], references: [id])
+
+    @@index([patientId])
+    @@index([type])
+    @@index([recordedAt])
+    @@map("patient_metrics")
+}
+
+model MedicalRecord {
+    id                  String   @id @default(cuid())
+    patientId           String   @unique
+    personalInfo        Json // PersonalInfo interface
+    medicalHistory      Json // MedicalHistory interface
+    currentMedications  String[]
+    allergies           String[]
+    dietaryRestrictions String[]
+    createdAt           DateTime @default(now())
+    updatedAt           DateTime @updatedAt
+
+    patient     Patient             @relation(fields: [patientId], references: [id], onDelete: Cascade)
+    notes       MedicalRecordNote[]
+    attachments FileAttachment[]
+
+    @@map("medical_records")
+}
+
+model MedicalRecordNote {
+    id              String   @id @default(cuid())
+    medicalRecordId String
+    content         String
+    type            NoteType
+    createdBy       String
+    createdAt       DateTime @default(now())
+
+    medicalRecord MedicalRecord    @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
+    attachments   FileAttachment[]
+    author        User             @relation(fields: [createdBy], references: [id])
+
+    @@map("medical_record_notes")
+}
+
+model ProgressMetric {
+    id         String     @id @default(cuid())
+    patientId  String
+    userId     String
+    type       MetricType
+    value      Float
+    unit       String
+    date       DateTime
+    notes      String?
+    recordedBy String
+
+    patientUser User    @relation("PatientMetrics", fields: [userId], references: [id])
+    recorder    User    @relation("RecordedMetrics", fields: [recordedBy], references: [id])
+    patient     Patient @relation(fields: [patientId], references: [id])
+
+    @@map("progress_metrics")
+}
+
+model Message {
+    id         String      @id @default(cuid())
+    senderId   String
+    receiverId String
+    content    String
+    type       MessageType @default(TEXT)
+    isRead     Boolean     @default(false)
+    sentAt     DateTime    @default(now())
+
+    sender    User     @relation("SenderMessages", fields: [senderId], references: [id])
+    receiver  User     @relation("ReceiverMessages", fields: [receiverId], references: [id])
+    patient   Patient? @relation(fields: [patientId], references: [id])
+    patientId String?
+
+    @@map("messages")
+}
+
+model FileAttachment {
+    id           String        @id @default(cuid())
+    filename     String
+    originalName String
+    mimeType     String
+    size         Int
+    url          String
+    category     FileCategory?
+    uploadedBy   String
+    uploadedAt   DateTime      @default(now())
+
+    // Relaciones polimórficas
+    medicalRecordId     String?
+    messageId           String?
+    medicalRecordNoteId String?
+    medicalRecord       MedicalRecord?     @relation(fields: [medicalRecordId], references: [id])
+    medicalRecordNote   MedicalRecordNote? @relation(fields: [medicalRecordNoteId], references: [id])
+
+    @@map("file_attachments")
+}
+
+model Appointment {
+    id             String            @id @default(cuid())
+    patientId      String
+    nutritionistId String
+    date           DateTime
+    time           String // HH:MM format
+    type           AppointmentType
+    duration       Int // in minutes
+    status         AppointmentStatus @default(SCHEDULED)
+    notes          String?
+    createdAt      DateTime          @default(now())
+    updatedAt      DateTime          @updatedAt
+
+    // Relaciones
+    patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+    nutritionist User    @relation(fields: [nutritionistId], references: [id])
+
+    @@map("appointments")
+}
+
+model PlanVersion {
+    id        String   @id @default(cuid())
+    planId    String
+    version   Int
+    snapshot  Json // snapshot completo del plan en JSON
+    createdBy String
+    createdAt DateTime @default(now())
+
+    plan   Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+    author User @relation(fields: [createdBy], references: [id])
+
+    @@index([planId, version])
+    @@map("plan_versions")
+}
+
+model AuditLog {
+    id        String   @id @default(cuid())
+    actorId   String?
+    action    String
+    model     String
+    modelId   String?
+    diff      Json?
+    createdAt DateTime @default(now())
+
+    actor User? @relation(fields: [actorId], references: [id])
+
+    @@index([model, modelId])
+    @@map("audit_logs")
+}
+
+// Enums
+enum UserRole {
+    USER
+    PRO
+    ADMIN
+}
+
+enum ActivityLevel {
+    SEDENTARY
+    LIGHT
+    MODERATE
+    ACTIVE
+    VERY_ACTIVE
+}
+
+enum Gender {
+    MALE
+    FEMALE
+    OTHER
+}
+
+enum Difficulty {
+    EASY
+    MEDIUM
+    HARD
+}
+
+enum PlanStatus {
+    DRAFT
+    ACTIVE
+    PAUSED
+    COMPLETED
+}
+
+enum MealType {
+    BREAKFAST
+    LUNCH
+    DINNER
+    SNACK
+}
+
+enum PatientStatus {
+    PENDING
+    ACTIVE
+    INACTIVE
+}
+
+enum MetricType {
+    WEIGHT
+    HEIGHT
+    BMI
+    BODY_FAT
+    MUSCLE_MASS
+    WATER_PERCENTAGE
+    BONE_DENSITY
+    WAIST_CIRCUMFERENCE
+    HIP_CIRCUMFERENCE
+    CHEST_CIRCUMFERENCE
+    ARM_CIRCUMFERENCE
+    THIGH_CIRCUMFERENCE
+    BLOOD_PRESSURE_SYSTOLIC
+    BLOOD_PRESSURE_DIASTOLIC
+    HEART_RATE
+    BLOOD_GLUCOSE
+    CHOLESTEROL
+    TRIGLYCERIDES
+}
+
+enum MessageType {
+    TEXT
+    IMAGE
+    FILE
+}
+
+enum FileCategory {
+    IMAGE
+    DOCUMENT
+    LAB_RESULT
+    OTHER
+}
+
+enum NoteType {
+    GENERAL
+    SYMPTOM
+    TREATMENT
+    FOLLOW_UP
+}
+
+enum AppointmentType {
+    INITIAL_CONSULTATION
+    FOLLOW_UP
+    REVIEW
+    EMERGENCY
+}
+
+enum AppointmentStatus {
+    SCHEDULED
+    COMPLETED
+    CANCELLED
+    RESCHEDULED
+}

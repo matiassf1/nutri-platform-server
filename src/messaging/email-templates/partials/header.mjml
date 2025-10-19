@@ -1,0 +1,15 @@
+<!-- NutriTeam Header Component -->
+<mj-section padding="0px" background-color="#FFFFFF">
+  <mj-column>
+    <mj-text
+      color="#1F2937"
+      font-size="32px"
+      font-weight="700"
+      align="center"
+      padding="32px 24px"
+      background-color="#FFFFFF"
+    >
+      <span style="color: #4caf50">N</span>utriTeam
+    </mj-text>
+  </mj-column>
+</mj-section>

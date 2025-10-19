@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "address" TEXT,
+ADD COLUMN     "availability" JSONB,
+ADD COLUMN     "bio" TEXT,
+ADD COLUMN     "certifications" TEXT,
+ADD COLUMN     "consultationFee" DOUBLE PRECISION,
+ADD COLUMN     "education" TEXT,
+ADD COLUMN     "experience" INTEGER,
+ADD COLUMN     "instagram" TEXT,
+ADD COLUMN     "language" TEXT[],
+ADD COLUMN     "linkedin" TEXT,
+ADD COLUMN     "phone" TEXT,
+ADD COLUMN     "specialization" TEXT,
+ADD COLUMN     "timezone" TEXT,
+ADD COLUMN     "website" TEXT;
