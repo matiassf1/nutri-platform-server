@@ -107,6 +107,27 @@ export class PlansController {
     }
   }
 
+  @Get("item-keys")
+  @ApiOperation({ summary: "Get plans for autocomplete" })
+  @ApiQuery({
+    name: "name",
+    required: false,
+    type: String,
+    description: "Search by plan name",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Plan item keys retrieved successfully",
+  })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  async getItemKeys(
+    @Query("name") name: string,
+    @CurrentUser() user: CurrentUserType
+  ) {
+    const result = await this.plansService.getItemKeys(name, user);
+    return this.responseService.success(result, "Plan item keys retrieved successfully");
+  }
+
   @Get("available-recipes")
   @ApiOperation({ summary: "Get available recipes for patient" })
   @ApiResponse({
@@ -353,6 +374,64 @@ export class PlansController {
   async remove(@Param("id") id: string, @CurrentUser() user: CurrentUserType) {
     const result = await this.plansService.remove(id, user);
     return this.responseService.success(result, "Plan deleted successfully");
+  }
+
+  @Post(":id/duplicate")
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: "Duplicate an existing nutrition plan" })
+  @ApiParam({ name: "id", description: "Plan ID to duplicate" })
+  @ApiResponse({
+    status: 201,
+    description: "Plan duplicated successfully",
+  })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 403, description: "Forbidden - You can only duplicate your own plans" })
+  @ApiResponse({ status: 404, description: "Plan not found" })
+  async duplicate(
+    @Param("id") id: string,
+    @CurrentUser() user: CurrentUserType
+  ) {
+    const plan = await this.plansService.duplicate(id, user);
+    return this.responseService.created(plan, "Plan duplicated successfully");
+  }
+
+  @Post(":id/assign-to-patient")
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: "Assign a plan template to a specific patient (creates a copy)" })
+  @ApiParam({ name: "id", description: "Plan ID to assign" })
+  @ApiResponse({
+    status: 201,
+    description: "Plan assigned to patient successfully",
+  })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 403, description: "Forbidden - Professional access required" })
+  @ApiResponse({ status: 404, description: "Plan or patient not found" })
+  async assignToPatient(
+    @Param("id") id: string,
+    @Body() body: { patientId: string; startDate?: string },
+    @CurrentUser() user: CurrentUserType
+  ) {
+    const plan = await this.plansService.assignToPatient(id, body.patientId, body.startDate, user);
+    return this.responseService.created(plan, "Plan assigned to patient successfully");
+  }
+
+  @Post(":id/unassign")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Unassign a plan from a patient (sets status to PAUSED)" })
+  @ApiParam({ name: "id", description: "Plan ID to unassign" })
+  @ApiResponse({
+    status: 200,
+    description: "Plan unassigned from patient successfully",
+  })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 403, description: "Forbidden - Professional access required" })
+  @ApiResponse({ status: 404, description: "Plan not found" })
+  async unassignFromPatient(
+    @Param("id") id: string,
+    @CurrentUser() user: CurrentUserType
+  ) {
+    const plan = await this.plansService.unassignFromPatient(id, user);
+    return this.responseService.updated(plan, "Plan unassigned from patient successfully");
   }
 
   @Patch(":planId/meals/:mealId/status")

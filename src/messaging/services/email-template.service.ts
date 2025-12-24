@@ -39,41 +39,22 @@ export class EmailTemplateService {
 
   private registerTemplate(templateName: string): void {
     try {
-      // Try dist directory first (production), then src directory (development)
-      const distPath = path.join(
-        __dirname,
-        "../email-templates/compiled",
-        `${templateName}.template.hbs`
-      );
+      const templateFileName = `${templateName}.template.hbs`;
+      const isProduction = process.env.NODE_ENV === "production";
+      
+      // In development: use src folder directly
+      // In production: use dist folder (assets copied by nest build)
+      const templatePath = isProduction
+        ? path.join(__dirname, "../email-templates/compiled", templateFileName)
+        : path.join(process.cwd(), "src/messaging/email-templates/compiled", templateFileName);
 
-      const srcPath = path.join(
-        __dirname,
-        "../../../src/messaging/email-templates/compiled",
-        `${templateName}.template.hbs`
-      );
-
-      // Check which path exists
-      let templatePath: string | null = null;
-
-      if (fs.existsSync(distPath)) {
-        templatePath = distPath;
-        this.logger.debug(`Found template in dist: ${templatePath}`);
-      } else if (fs.existsSync(srcPath)) {
-        templatePath = srcPath;
-        this.logger.debug(`Found template in src: ${templatePath}`);
-      }
-
-      if (templatePath) {
+      if (fs.existsSync(templatePath)) {
         const templateSource = fs.readFileSync(templatePath, "utf8");
         const template = handlebars.compile(templateSource);
         this.templateCache.set(templateName, template);
-        this.logger.log(
-          `Template ${templateName} registered successfully from: ${templatePath}`
-        );
+        this.logger.log(`Template ${templateName} registered from: ${templatePath}`);
       } else {
-        this.logger.warn(`Template file not found in either location:`);
-        this.logger.warn(`  Dist: ${distPath}`);
-        this.logger.warn(`  Src: ${srcPath}`);
+        this.logger.warn(`Template file not found: ${templatePath}`);
       }
     } catch (error) {
       this.logger.error(`Failed to register template ${templateName}:`, error);

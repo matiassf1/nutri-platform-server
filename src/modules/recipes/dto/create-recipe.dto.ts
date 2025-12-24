@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Difficulty } from "@prisma/client";
+import { Type } from "class-transformer";
 import {
   ArrayMinSize,
   IsArray,
@@ -12,6 +13,7 @@ import {
   IsUrl,
   Max,
   Min,
+  ValidateNested,
 } from "class-validator";
 
 export class CreateRecipeIngredientDto {
@@ -128,22 +130,14 @@ export class CreateRecipeDto {
   @IsNotEmpty({ message: "Title is required" })
   title: string;
 
-
   @ApiProperty({
-    description: "Recipe name",
+    description: "Recipe name (optional, defaults to title)",
     example: "Grilled Chicken with Vegetables",
+    required: false,
   })
+  @IsOptional()
   @IsString({ message: "Name must be a string" })
-  @IsNotEmpty({ message: "Name is required" })
-  name: string;
-
-  @ApiProperty({
-    description: "Recipe author ID",
-    example: "123e4567-e89b-12d3-a456-426614174000",
-  })
-  @IsString({ message: "Author ID must be a string" })
-  @IsNotEmpty({ message: "Author ID is required" })
-  authorId: string;
+  name?: string;
 
   @ApiProperty({
     description: "Recipe description",
@@ -178,7 +172,7 @@ export class CreateRecipeDto {
     example: 15,
   })
   @IsNumber({}, { message: "Prep time must be a number" })
-  @Min(1, { message: "Prep time must be at least 1 minute" })
+  @Min(0, { message: "Prep time must be non-negative" })
   @Max(1440, { message: "Prep time must be at most 24 hours" })
   prepTime: number;
 
@@ -237,6 +231,8 @@ export class CreateRecipeDto {
   })
   @IsArray({ message: "Ingredients must be an array" })
   @ArrayMinSize(1, { message: "At least one ingredient is required" })
+  @ValidateNested({ each: true })
+  @Type(() => CreateRecipeIngredientDto)
   ingredients: CreateRecipeIngredientDto[];
 
   @ApiProperty({
@@ -245,5 +241,7 @@ export class CreateRecipeDto {
     required: false,
   })
   @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateRecipeNutritionDto)
   nutrition?: CreateRecipeNutritionDto;
 }

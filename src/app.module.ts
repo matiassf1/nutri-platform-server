@@ -4,6 +4,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 // Modules
 import { HealthModule } from "./health/health.module";
 import { AppointmentsModule } from "./modules/appointments/appointments.module";
+import { AuditLogsModule } from "./modules/audit-logs/audit-logs.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { FilesModule } from "./modules/files/files.module";
 import { InvitationsModule } from "./modules/invitations/invitations.module";
@@ -39,6 +40,7 @@ import { DatabaseModule } from "./config/database.module";
     AuthModule,
     UsersModule,
     AppointmentsModule,
+    AuditLogsModule,
     RecipesModule,
     PlansModule,
     PatientsModule,

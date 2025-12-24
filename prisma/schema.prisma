@@ -165,10 +165,10 @@ model Plan {
     id              String     @id @default(cuid())
     name            String
     description     String?
-    patientId       String // refiere a Patient.id
+    patientId       String? // refiere a Patient.id (opcional para templates/planes sin asignar)
     nutritionistId  String // refiere a User.id (el pro)
     status          PlanStatus @default(DRAFT)
-    startDate       DateTime
+    startDate       DateTime   @default(now())
     endDate         DateTime?
     goals           String[]   @default([])
     notes           String?
@@ -184,7 +184,7 @@ model Plan {
     updatedAt       DateTime   @updatedAt
 
     // relaciones
-    patient      Patient       @relation(fields: [patientId], references: [id])
+    patient      Patient?      @relation(fields: [patientId], references: [id])
     nutritionist User          @relation("NutritionistPlans", fields: [nutritionistId], references: [id])
     days         PlanDay[]
     versions     PlanVersion[]

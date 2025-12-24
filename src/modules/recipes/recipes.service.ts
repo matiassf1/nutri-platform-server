@@ -112,11 +112,15 @@ export class RecipesService {
   }
 
   async create(createRecipeDto: CreateRecipeDto, user: CurrentUserType) {
-    const { ingredients, nutrition, ...recipeData } = createRecipeDto;
+    const { ingredients, nutrition, name, ...recipeData } = createRecipeDto;
 
     const recipe = await this.prismaService.recipe.create({
       data: {
         ...recipeData,
+        // Use name if provided, otherwise default to title
+        name: name || recipeData.title,
+        // Set both authorId (for relation) and createdBy (for compatibility)
+        authorId: user.id,
         createdBy: user.id,
         ingredients: {
           create: ingredients,
@@ -230,12 +234,15 @@ export class RecipesService {
   }
 
   async getRecipeStats(userId: string) {
-    const [totalRecipes, activeRecipes, totalIngredients] = await Promise.all([
+    const [total, published, draft, totalIngredients] = await Promise.all([
       this.prismaService.recipe.count({
         where: { createdBy: userId },
       }),
       this.prismaService.recipe.count({
         where: { createdBy: userId, isActive: true },
+      }),
+      this.prismaService.recipe.count({
+        where: { createdBy: userId, isActive: false },
       }),
       this.prismaService.recipeIngredient.count({
         where: {
@@ -247,9 +254,11 @@ export class RecipesService {
     ]);
 
     return {
-      totalRecipes,
-      activeRecipes,
+      total,
+      published,
+      draft,
       totalIngredients,
+      averageRating: 0, // TODO: Implement when ratings are added
     };
   }
 

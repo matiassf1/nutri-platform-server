@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -83,6 +84,18 @@ export class PlansService {
                       difficulty: true,
                     },
                   },
+                  selectedRecipe: {
+                    select: {
+                      id: true,
+                      title: true,
+                      description: true,
+                      image: true,
+                      cookTime: true,
+                      prepTime: true,
+                      difficulty: true,
+                      nutrition: true,
+                    },
+                  },
                 },
               },
             },
@@ -140,6 +153,18 @@ export class PlansService {
                   select: {
                     id: true,
                     title: true,
+                    image: true,
+                    cookTime: true,
+                    prepTime: true,
+                    difficulty: true,
+                    nutrition: true,
+                  },
+                },
+                selectedRecipe: {
+                  select: {
+                    id: true,
+                    title: true,
+                    description: true,
                     image: true,
                     cookTime: true,
                     prepTime: true,
@@ -337,6 +362,365 @@ export class PlansService {
     this.logger.log(`Plan deleted: ${id} by user: ${user.id}`);
 
     return { message: "Plan deleted successfully" };
+  }
+
+  /**
+   * Get plan item keys for autocomplete
+   */
+  async getItemKeys(name: string | undefined, user: CurrentUserType) {
+    const where: any = {};
+
+    // If not admin, filter by user's plans
+    if (user.role !== "ADMIN") {
+      where.OR = [
+        { nutritionistId: user.id },
+        { patientId: user.patientId },
+      ];
+    }
+
+    if (name) {
+      where.name = {
+        contains: name,
+        mode: "insensitive",
+      };
+    }
+
+    const plans = await this.prismaService.plan.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+      take: 20,
+    });
+
+    return { items: plans };
+  }
+
+  /**
+   * Duplicate an existing plan
+   */
+  async duplicate(id: string, user: CurrentUserType) {
+    const existingPlan = await this.prismaService.plan.findUnique({
+      where: { id },
+      include: {
+        days: {
+          include: {
+            meals: {
+              include: {
+                recipes: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existingPlan) {
+      throw new NotFoundException("Plan not found");
+    }
+
+    // Check if user has access to duplicate this plan
+    if (user.role !== "ADMIN" && existingPlan.nutritionistId !== user.id) {
+      throw new ForbiddenException("You can only duplicate your own plans");
+    }
+
+    // Create duplicated plan
+    const duplicatedPlan = await this.prismaService.plan.create({
+      data: {
+        name: `${existingPlan.name} (Copia)`,
+        description: existingPlan.description,
+        status: "DRAFT",
+        nutritionistId: user.id,
+        patientId: null, // New plan has no patient assigned
+        startDate: null,
+        endDate: null,
+        goals: existingPlan.goals,
+        days: {
+          create: existingPlan.days.map((day) => ({
+            dayOfWeek: day.dayOfWeek,
+            isActive: day.isActive,
+            notes: day.notes,
+            meals: {
+              create: day.meals.map((meal) => ({
+                type: meal.type,
+                time: meal.time,
+                isCompleted: false,
+                notes: meal.notes,
+                recipes: {
+                  connect: meal.recipes.map((r) => ({ id: r.id })),
+                },
+              })),
+            },
+          })),
+        },
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        nutritionist: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        days: {
+          include: {
+            meals: {
+              include: {
+                recipes: {
+                  select: {
+                    id: true,
+                    title: true,
+                    image: true,
+                    cookTime: true,
+                    prepTime: true,
+                    difficulty: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    this.logger.log(`Plan duplicated: ${id} -> ${duplicatedPlan.id} by user: ${user.id}`);
+
+    return duplicatedPlan;
+  }
+
+  /**
+   * Assign a plan template to a specific patient (creates a copy with patient assigned)
+   */
+  async assignToPatient(
+    planId: string,
+    patientId: string,
+    startDate: string | undefined,
+    user: CurrentUserType
+  ) {
+    // Verify user is a professional
+    if (user.role !== "PRO" && user.role !== "ADMIN") {
+      throw new ForbiddenException("Only professionals can assign plans to patients");
+    }
+
+    // Verify the patient exists and belongs to the nutritionist
+    const patient = await this.prismaService.patient.findFirst({
+      where: {
+        id: patientId,
+        nutritionistId: user.id,
+      },
+    });
+
+    if (!patient) {
+      throw new NotFoundException("Patient not found or not assigned to you");
+    }
+
+    // Get the existing plan
+    const existingPlan = await this.prismaService.plan.findUnique({
+      where: { id: planId },
+      include: {
+        days: {
+          include: {
+            meals: {
+              include: {
+                recipes: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existingPlan) {
+      throw new NotFoundException("Plan not found");
+    }
+
+    // Check if user has access to this plan
+    if (user.role !== "ADMIN" && existingPlan.nutritionistId !== user.id) {
+      throw new ForbiddenException("You can only assign your own plans");
+    }
+
+    // Create a new plan for the patient based on the template
+    const assignedPlan = await this.prismaService.plan.create({
+      data: {
+        name: existingPlan.name,
+        description: existingPlan.description,
+        status: "ACTIVE",
+        nutritionistId: user.id,
+        patientId: patientId,
+        startDate: startDate ? new Date(startDate) : new Date(),
+        endDate: existingPlan.endDate,
+        goals: existingPlan.goals,
+        notes: existingPlan.notes,
+        kcalPerDay: existingPlan.kcalPerDay,
+        proteinGr: existingPlan.proteinGr,
+        fatGr: existingPlan.fatGr,
+        carbsGr: existingPlan.carbsGr,
+        frequencyPerDay: existingPlan.frequencyPerDay,
+        restrictions: existingPlan.restrictions,
+        preferences: existingPlan.preferences,
+        days: {
+          create: existingPlan.days.map((day) => ({
+            dayOfWeek: day.dayOfWeek,
+            isActive: day.isActive,
+            notes: day.notes,
+            meals: {
+              create: day.meals.map((meal) => ({
+                type: meal.type,
+                time: meal.time,
+                notes: meal.notes,
+                kcal: meal.kcal,
+                proteinGr: meal.proteinGr,
+                fatGr: meal.fatGr,
+                carbsGr: meal.carbsGr,
+                recipes: {
+                  connect: meal.recipes.map((r) => ({ id: r.id })),
+                },
+              })),
+            },
+          })),
+        },
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+        nutritionist: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        days: {
+          include: {
+            meals: {
+              include: {
+                recipes: {
+                  select: {
+                    id: true,
+                    title: true,
+                    image: true,
+                    cookTime: true,
+                    prepTime: true,
+                    difficulty: true,
+                  },
+                },
+                selectedRecipe: {
+                  select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    image: true,
+                    cookTime: true,
+                    prepTime: true,
+                    difficulty: true,
+                    nutrition: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    this.logger.log(`Plan ${planId} assigned to patient ${patientId} as ${assignedPlan.id} by user: ${user.id}`);
+
+    return assignedPlan;
+  }
+
+  /**
+   * Unassign a plan from a patient
+   * This sets the plan status to PAUSED and removes the patient association
+   */
+  async unassignFromPatient(
+    planId: string,
+    user: CurrentUserType
+  ) {
+    // Check if user is a professional
+    if (user.role !== "PRO" && user.role !== "ADMIN") {
+      throw new ForbiddenException("Only professionals can unassign plans from patients");
+    }
+
+    // Get the plan
+    const plan = await this.prismaService.plan.findUnique({
+      where: { id: planId },
+      include: {
+        patient: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!plan) {
+      throw new NotFoundException("Plan not found");
+    }
+
+    // Check if user owns this plan
+    if (user.role !== "ADMIN" && plan.nutritionistId !== user.id) {
+      throw new ForbiddenException("You do not have permission to modify this plan");
+    }
+
+    // Check if plan has a patient assigned
+    if (!plan.patientId) {
+      throw new BadRequestException("This plan is not assigned to any patient");
+    }
+
+    const patientName = plan.patient?.user?.name || plan.patientId;
+
+    // Update the plan to remove patient and set status to PAUSED
+    const updatedPlan = await this.prismaService.plan.update({
+      where: { id: planId },
+      data: {
+        patientId: null,
+        status: "PAUSED",
+      },
+      include: {
+        nutritionist: {
+          select: { id: true, name: true, email: true },
+        },
+        days: {
+          include: {
+            meals: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(`Plan ${planId} unassigned from patient ${patientName} by user: ${user.id}`);
+
+    return updatedPlan;
   }
 
   async updateMealStatus(
